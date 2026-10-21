@@ -1,0 +1,18 @@
+<!doctype html><html lang="es"><meta charset="UTF-8"><title>STRING ART servidor remoto</title>
+<style>body{font-family:system-ui;background:#0b1120;color:white;margin:0;padding:30px}main{max-width:750px;margin:auto}section{background:#1c2941;padding:26px;margin:20px 0;border-radius:14px}button{font-size:18px;background:#396bdc;border:0;color:white;padding:12px 20px;border-radius:9px}#counter{font-size:52px;font-weight:bold;color:#7feec2}</style>
+<main><h1>STRING ART · Navegador remoto</h1><section><h2>Prueba de cálculo en Worker</h2><p>Inicia el contador. El navegador y el Worker se ejecutan en el servidor, no en tu iPhone.</p><p id="counter">0</p><button id="start">Iniciar Worker</button><button id="stop">Detener</button><p id="state"></p></section>
+<section><h2>Carga tu interfaz HTML original</h2><p>Utiliza el administrador de archivos de este escritorio remoto para subir <b>STRINGART_V26_CORREGIDO_FIDELIDAD_VISUAL(2).html</b> a Desktop; luego ábrelo en este mismo Chromium.</p><p><strong>Esta prueba no incluye aún el motor real.</strong> Solo valida que existe un escritorio remoto con navegador y Workers.</p></section></main>
+<script>
+let worker=null;
+let n=Number(localStorage.getItem('test_counter')||0);
+document.querySelector('#counter').textContent=n;
+document.querySelector('#start').onclick=()=>{
+if(worker)return;
+const body='let n=0;let timer=null;self.onmessage=e=>{if(e.data.cmd==="start"){n=e.data.n;timer=setInterval(()=>postMessage(++n),1000)}else{clearInterval(timer);close()}}';
+worker=new Worker(URL.createObjectURL(new Blob([body],{type:'text/javascript'})));
+worker.onmessage=e=>{n=e.data;document.querySelector('#counter').textContent=n;localStorage.setItem('test_counter',n)};
+worker.onerror=e=>{document.querySelector('#state').textContent='Error del Worker: '+e.message};
+worker.postMessage({cmd:'start',n});document.querySelector('#state').textContent='Worker en ejecución';
+};
+document.querySelector('#stop').onclick=()=>{if(worker){worker.postMessage({cmd:'stop'});worker=null;document.querySelector('#state').textContent='Detenido'}};
+</script></html>
